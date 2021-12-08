@@ -20,8 +20,9 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 			fdget_obj(cli, msgt);
 		room.begin();
 	}
-	fdput_obj(cli, msgt);
-	bool quit = false;
+	else
+		fdget_obj(cli, msgt);
+	bool quit = msgt != 29;
 	for(std::size_t i=0;i<room.getProblemCount();i++)
 	{
 		fdput_str(cli, room.getProblem(i));

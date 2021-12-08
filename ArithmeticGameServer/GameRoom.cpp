@@ -46,7 +46,7 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 				fake = dice() % 100 + 1;
 				if(j > 0)
 				{
-					while(fake != ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
+					while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
 						fake = dice() % 100 + 1;
 				}
 			}
@@ -54,13 +54,16 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 			{
 				end = std::upper_bound(tricks.begin(), tricks.end(), ans) - tricks.begin();
 				fake = ans;
-				while(fake != ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
+				if(j > 0)
 				{
-					trick = tricks[dice() % end];
-					if(dice() % 2)
-						fake = ans + trick;
-					else
-						fake = ans - trick;
+					while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
+					{
+						trick = tricks[dice() % end];
+						if(dice() % 2)
+							fake = ans + trick;
+						else
+							fake = ans - trick;
+					}
 				}
 			}
 			fakes[j] = fake;
@@ -91,6 +94,12 @@ void GameRoom::begin()
 
 void GameRoom::addPlayer(int fd, const std::string &name)
 {
+	char msgt = 83;
+	for(const auto &player : this->players)
+	{
+		fdput_obj(player.getFileDes(), msgt);
+		fdput_str(player.getFileDes(), name);
+	}
 	this->players.emplace_back(fd, name);
 }
 

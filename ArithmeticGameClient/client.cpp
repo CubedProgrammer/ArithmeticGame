@@ -10,6 +10,7 @@
 #include<cctype>
 #include<iostream>
 #include<memory>
+#include"utils/formatting.hpp"
 #include"utils/Socket.hpp"
 #define gchlo std::tolower(gch)
 #define ring std::cout.put('\a').flush()
@@ -22,9 +23,12 @@ std::pair<std::uint32_t,std::uint32_t>getSettings()
 	pair<uint32_t, uint32_t> settings;
 	cout << "Enter the number of problems and the maximum size of the operand." << endl;
 	cin >> settings.second >> settings.first;
-	settings.first = htonl(settings.first);
+	settings.first = htonl(settings.first-1);
 	settings.second = htonl(settings.second);
 	return settings;
+}
+void play(bool signal, std::istream &iss, std::ostream&oss)
+{
 }
 int main(int argl,char**argv)
 {
@@ -73,6 +77,10 @@ int main(int argl,char**argv)
 			term.c_lflag &= ~ECHO;
 			tcsetattr(STDIN_FILENO, TCSANOW, &term);
 #endif
+			cout << "Press any key to start." << endl;
+			gch;
+			sockp->getOstream().put(29);
+			play(false, sockp->getIstream(), sockp->getOstream());
 		}
 		else if(cmd == 'j')
 		{
@@ -90,11 +98,19 @@ int main(int argl,char**argv)
 			sockp->getOstream().put(msgt);
 			sockp->getOstream().PUTOBJ(namlen) << name;
 			sockp->getOstream().PUTOBJ(rnum);
+			msgt = sockp->getIstream().get();
+			if(msgt == 17)
+				cout << fmt_green_foreground << "Successfully joined game." << fmt_reset << endl;
+			else if(msgt == 19)
+				cout << fmt_red_foreground << "Sorry, you're too late, the game has already begun." << fmt_reset << endl;
+			else
+				cout << fmt_red_foreground << fmt_bold << "No such room exists." << fmt_reset << endl;
 #ifndef _WIN32
 			term.c_lflag &= ~ICANON;
 			term.c_lflag &= ~ECHO;
 			tcsetattr(STDIN_FILENO, TCSANOW, &term);
 #endif
+			play(true, sockp->getIstream(), sockp->getOstream());
 		}
 		else
 			ring;
