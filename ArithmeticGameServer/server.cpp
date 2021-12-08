@@ -91,10 +91,12 @@ void accept_clients(std::vector<std::thread>&ths, std::unordered_map<uint32_t, G
 				maxi = ntohl(maxi);
 				pcnt = ntohl(pcnt);
 				rooms[rnum] = GameRoom(pcnt, maxi, rnum);
+				cout << name << " has created room " << hex << rnum << dec << " with " << maxi << " as maximum operand and " << pcnt << " problems." << endl;
 				fdput_obj(cli, htonl(rnum));
+				cout << "lesbian" << endl;
 				rooms[rnum].addPlayer(cli, name);
+				cout << "pussy" << endl;
 				roomp = &rooms[rnum];
-				cout << name << " has created room " << hex << rnum << dec << endl;
 			}
 			else
 			{
