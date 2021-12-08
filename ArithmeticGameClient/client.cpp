@@ -10,6 +10,7 @@
 #include<cctype>
 #include<iostream>
 #include<memory>
+#include<thread>
 #include"utils/formatting.hpp"
 #include"utils/Socket.hpp"
 #define gchlo std::tolower(gch)
@@ -27,13 +28,82 @@ std::pair<std::uint32_t,std::uint32_t>getSettings()
 	settings.second = htonl(settings.second);
 	return settings;
 }
+void display_names(std::istream *issp)
+{
+	auto &iss = *issp;
+	char msgt = iss.get();
+	std::uint32_t cc;
+	std::string name;
+	while(msgt != 89)
+	{
+		if(msgt == 83)
+		{
+			iss.GETOBJ(cc);
+			cc = ntohl(cc);
+			name = std::string(cc, msgt);
+			iss.read(name.data(), cc);
+			std::cout << fmt_bold << name << fmt_reset << " has joined the game." << std::endl;
+		}
+		msgt = iss.get();
+	}
+}
 void play(bool signal, std::istream &iss, std::ostream&oss)
 {
+	using namespace std;
+	using namespace chrono;
+	using this_thread::sleep_for;
+	cout << "Press buttons 1 through 4 to enter your answer." << endl;
+	cout << "Starting in 3";
+	sleep_for(997ms);
+	cout << "\b2";
+	sleep_for(997ms);
+	cout << "\b1";
+	char msgt = iss.get();
+	if(msgt == 97)
+	{
+		string ps, anshis;
+		char cho;
+		cout << "\b0" << endl;
+		if(signal)
+			oss.put(29);
+		uint32_t corrects, tot;
+		uint32_t cc;
+		iss.get(msgt);
+		while(msgt == 47)
+		{
+			iss.GETOBJ(cc);
+			cc = ntohl(cc);
+			ps = std::string(cc, msgt);
+			iss.read(ps.data(),cc);
+			iss.GETOBJ(corrects).GETOBJ(tot);
+			corrects = ntohl(corrects);
+			tot = ntohl(tot);
+			cout << '\r' << anshis << fmt_reset << corrects << '/' << tot << ' ' << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b";
+			cho = gch - '0' + 31;
+			oss.put(cho);
+			iss.get(msgt);
+			if(msgt == 37)
+			{
+				cout << '\r' << fmt_green_foreground << fmt_bold << "CORRECT" << fmt_reset << " +1 for you.";
+				anshis += fmt_green_background;
+			}
+			else if(msgt == 41)
+			{
+				iss.GETOBJ(cc);
+				cc = ntohl(cc);
+				cout << '\r' << fmt_red_foreground << fmt_bold << "WRONG" << fmt_reset << " No point for you, " << cc << " was the answer.";
+				anshis += fmt_red_background;
+			}
+			anshis += ' ';
+			iss.get(msgt);
+		}
+	}
 }
 int main(int argl,char**argv)
 {
 	using namespace std;
 	using namespace string_literals;
+	using this_thread::sleep_for;
 #ifdef _WIN32
 #else
 	termios term;
@@ -77,8 +147,10 @@ int main(int argl,char**argv)
 			term.c_lflag &= ~ECHO;
 			tcsetattr(STDIN_FILENO, TCSANOW, &term);
 #endif
+			thread th(display_names, &sockp->getIstream());
 			cout << "Press any key to start." << endl;
 			gch;
+			sleep_for(17ms);
 			sockp->getOstream().put(29);
 			play(false, sockp->getIstream(), sockp->getOstream());
 		}
@@ -100,17 +172,20 @@ int main(int argl,char**argv)
 			sockp->getOstream().PUTOBJ(rnum);
 			msgt = sockp->getIstream().get();
 			if(msgt == 17)
+			{
 				cout << fmt_green_foreground << "Successfully joined game." << fmt_reset << endl;
+				display_names(&sockp->getIstream());
+#ifndef _WIN32
+				term.c_lflag &= ~ICANON;
+				term.c_lflag &= ~ECHO;
+				tcsetattr(STDIN_FILENO, TCSANOW, &term);
+#endif
+				play(true, sockp->getIstream(), sockp->getOstream());
+			}
 			else if(msgt == 19)
 				cout << fmt_red_foreground << "Sorry, you're too late, the game has already begun." << fmt_reset << endl;
 			else
 				cout << fmt_red_foreground << fmt_bold << "No such room exists." << fmt_reset << endl;
-#ifndef _WIN32
-			term.c_lflag &= ~ICANON;
-			term.c_lflag &= ~ECHO;
-			tcsetattr(STDIN_FILENO, TCSANOW, &term);
-#endif
-			play(true, sockp->getIstream(), sockp->getOstream());
 		}
 		else
 			ring;

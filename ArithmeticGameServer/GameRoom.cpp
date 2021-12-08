@@ -99,6 +99,8 @@ void GameRoom::addPlayer(int fd, const std::string &name)
 	{
 		fdput_obj(player.getFileDes(), msgt);
 		fdput_str(player.getFileDes(), name);
+		fdput_obj(fd, msgt);
+		fdput_str(fd, player.getName());
 	}
 	this->players.emplace_back(fd, name);
 }

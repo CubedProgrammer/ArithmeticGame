@@ -25,6 +25,8 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 	bool quit = msgt != 29;
 	for(std::size_t i=0;i<room.getProblemCount();i++)
 	{
+		msgt = 47;
+		fdput_obj(cli, msgt);
 		fdput_str(cli, room.getProblem(i));
 		fdput_obj(cli, htonl(player.getCorrect()));
 		fdput_obj(cli, htonl(i));
@@ -35,7 +37,7 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 			fdput_obj(cli, msgt);
 			if(msgt == 41)
 				fdput_obj(cli, htonl(room.getAnsVal(i)));
-			usleep(1000000);
+			usleep(500000);
 		}
 		else
 		{
@@ -94,9 +96,7 @@ void accept_clients(std::vector<std::thread>&ths, std::unordered_map<uint32_t, G
 				rooms[rnum] = GameRoom(pcnt, maxi, rnum);
 				cout << name << " has created room " << hex << rnum << dec << " with " << maxi << " as maximum operand and " << pcnt << " problems." << endl;
 				fdput_obj(cli, htonl(rnum));
-				cout << "lesbian" << endl;
 				rooms[rnum].addPlayer(cli, name);
-				cout << "pussy" << endl;
 				roomp = &rooms[rnum];
 			}
 			else
