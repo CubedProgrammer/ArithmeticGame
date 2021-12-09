@@ -1,9 +1,11 @@
+#ifndef _WIN32
 #include<unistd.h>
+#endif
 #include<iostream>
 #include<algorithm>
 #include"sockbuf.hpp"
 #define BUFSZ 8192
-sockbuf::sockbuf(int sockfd)
+sockbuf::sockbuf(sock_type sockfd)
 	:sockfd(sockfd), bc(BUFSZ)
 {
 	this->rbuf = new char_type[BUFSZ];
@@ -13,7 +15,7 @@ sockbuf::~sockbuf()
 {
 	delete[]this->rbuf;
 #ifdef _WIN32
-	CloseHandle(sock);
+	closesocket(sockfd);
 #else
 	close(this->sockfd);
 #endif
@@ -63,14 +65,16 @@ std::streamsize sockbuf::xsgetn(char_type *buf, std::streamsize sz)
 		}
 		else
 			br = 0;
-		if(BUFSZ <= sz)
+		if (BUFSZ <= sz)
 #ifdef _WIN32
+			br += recv(sockfd, buf, sz, 0);
 #else
-			 br += read(this->sockfd, buf, sz);
+			br += read(this->sockfd, buf, sz);
 #endif
 		else
 		{
 #ifdef _WIN32
+			std::streamsize tot = recv(sockfd, rbuf, BUFSZ, 0);
 #else
 			std::streamsize tot = read(this->sockfd, this->rbuf, BUFSZ);
 #endif
@@ -99,6 +103,7 @@ std::streamsize sockbuf::xsgetn(char_type *buf, std::streamsize sz)
 std::streamsize sockbuf::xsputn(const char_type *buf, std::streamsize sz)
 {
 #ifdef _WIN32
+	return send(sockfd, buf, sz, 0);
 #else
 	return write(this->sockfd, buf, sz);
 #endif
@@ -108,6 +113,7 @@ sockbuf::int_type sockbuf::overflow(int_type ch)
 {
 	char_type acc = ch;
 #ifdef _WIN32
+	int succ = send(sockfd, &acc, 1, 0);
 #else
 	int succ = write(this->sockfd, &acc, 1);
 #endif

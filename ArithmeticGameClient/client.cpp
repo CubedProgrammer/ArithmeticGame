@@ -1,4 +1,5 @@
 #ifdef _WIN32
+#include<conio.h>
 #include<windows.h>
 #define gch getch()
 #else
@@ -14,6 +15,9 @@
 #include<thread>
 #include"utils/formatting.hpp"
 #include"utils/Socket.hpp"
+#ifdef _MSC_VER
+#pragma comment(lib, "ws2_32.lib")
+#endif
 #define gchlo std::tolower(gch)
 #define ring std::cout.put('\a').flush()
 #define GETOBJ(obj)read(reinterpret_cast<char*>(&obj), sizeof(obj))
@@ -111,6 +115,13 @@ int main(int argl,char**argv)
 	using namespace std;
 	using namespace string_literals;
 #ifdef _WIN32
+	WSADATA mssdat;
+	WSAStartup(MAKEWORD(2, 2), &mssdat);
+	HANDLE ho = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD cm;
+	GetConsoleMode(ho, &cm);
+	cm |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(ho, cm);
 #else
 	termios term;
 	tcgetattr(STDIN_FILENO, &term);
@@ -201,7 +212,9 @@ int main(int argl,char**argv)
 		cout << "Press q to quit, c to create a room, j to join an existing one." << endl;
 		cmd = gchlo;
 	}
-#ifndef _WIN32
+#ifdef _WIN32
+	WSACleanup();
+#else
 	term.c_lflag |= ICANON;
 	term.c_lflag |= ECHO;
 	tcsetattr(STDIN_FILENO, TCSANOW, &term);

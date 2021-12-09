@@ -1,17 +1,19 @@
 #ifndef UTILS_SOCKBUF_HPP_
 #define UTILS_SOCKBUF_HPP_
+#ifdef _WIN32
+#include<windows.h>
+typedef SOCKET sock_type;
+#else
+typedef int sock_type;
+#endif
 #include<streambuf>
 class sockbuf:public virtual std::streambuf
 {
-#ifdef _WIN32
-	HANDLE sock;
-#else
-	int sockfd;
-	char_type *rbuf;
+	sock_type sockfd;
+	char_type* rbuf;
 	std::streamsize bc;
-#endif
 public:
-	sockbuf(int sockfd);
+	sockbuf(sock_type sockfd);
 	~sockbuf();
 protected:
 	virtual int sync()override;

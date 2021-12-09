@@ -1,5 +1,8 @@
 #ifndef UTILS_SOCKET_HPP_
 #define UTILS_SOCKET_HPP_
+#ifdef _WIN32
+#include<windows.h>
+#endif
 #include<string>
 #include"isockstream.hpp"
 #include"osockstream.hpp"
@@ -7,7 +10,7 @@
 class Socket
 {
 #ifdef _WIN32
-	HANDLE sock;
+	SOCKET sock;
 #else
 	int sockfd;
 #endif
