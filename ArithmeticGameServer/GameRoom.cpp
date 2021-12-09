@@ -1,5 +1,6 @@
 #include<unistd.h>
 #include<algorithm>
+#include<iostream>
 #include<random>
 #include"GameRoom.hpp"
 #include"utils.hpp"
@@ -44,26 +45,20 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 			if(ans < 101)
 			{
 				fake = dice() % 100 + 1;
-				if(j > 0)
-				{
-					while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
-						fake = dice() % 100 + 1;
-				}
+				while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
+					fake = dice() % 100 + 1;
 			}
 			else
 			{
 				end = std::upper_bound(tricks.begin(), tricks.end(), ans) - tricks.begin();
 				fake = ans;
-				if(j > 0)
+				while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
 				{
-					while(fake == ans || std::find(fakes.begin(), fakes.begin() + j, fake) != fakes.begin() + j)
-					{
-						trick = tricks[dice() % end];
-						if(dice() % 2)
-							fake = ans + trick;
-						else
-							fake = ans - trick;
-					}
+					trick = tricks[dice() % end];
+					if(dice() % 2)
+						fake = ans + trick;
+					else
+						fake = ans - trick;
 				}
 			}
 			fakes[j] = fake;
@@ -82,6 +77,7 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 
 void GameRoom::begin()
 {
+	std::cout << "Room " << std::hex << this->num << std::dec << " has begun!" << std::endl;
 	char msgt = 89;
 	for(const auto &player : this->players)
 		fdput_obj(player.getFileDes(), msgt);
@@ -94,6 +90,7 @@ void GameRoom::begin()
 
 void GameRoom::addPlayer(int fd, const std::string &name)
 {
+	std::cout << name << " has joined room " << std::hex << this->num << std::dec << std::endl;
 	char msgt = 83;
 	for(const auto &player : this->players)
 	{

@@ -8,6 +8,7 @@
 #define gch std::cin.get()
 #endif
 #include<cctype>
+#include<future>
 #include<iostream>
 #include<memory>
 #include<thread>
@@ -54,10 +55,13 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 	using this_thread::sleep_for;
 	cout << "Press buttons 1 through 4 to enter your answer." << endl;
 	cout << "Starting in 3";
+	cout.flush();
 	sleep_for(997ms);
 	cout << "\b2";
+	cout.flush();
 	sleep_for(997ms);
 	cout << "\b1";
+	cout.flush();
 	char msgt = iss.get();
 	if(msgt == 97)
 	{
@@ -79,6 +83,7 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			corrects = ntohl(corrects);
 			tot = ntohl(tot);
 			cout << '\r' << anshis << fmt_reset << corrects << '/' << tot << ' ' << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b";
+			cout.flush();
 			cho = gch - '0' + 31;
 			oss.put(cho);
 			iss.get(msgt);
@@ -94,16 +99,17 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 				cout << '\r' << fmt_red_foreground << fmt_bold << "WRONG" << fmt_reset << " No point for you, " << cc << " was the answer.";
 				anshis += fmt_red_background;
 			}
+			cout.flush();
 			anshis += ' ';
 			iss.get(msgt);
 		}
 	}
+	endl(cout);
 }
 int main(int argl,char**argv)
 {
 	using namespace std;
 	using namespace string_literals;
-	using this_thread::sleep_for;
 #ifdef _WIN32
 #else
 	termios term;
@@ -121,6 +127,7 @@ int main(int argl,char**argv)
 	unique_ptr<Socket>sockp;
 	pair<uint32_t, uint32_t> settings;
 	uint32_t rnum, namlen;
+	future<void>async_names;
 	while(cmd != 'q')
 	{
 		if(cmd == 'c')
@@ -142,16 +149,17 @@ int main(int argl,char**argv)
 			sockp->getIstream().read(reinterpret_cast<char*>(&rnum), sizeof(rnum));
 			rnum = ntohl(rnum);
 			cout << "Room number is " << hex << rnum << dec << endl;
+			cin.get();
 #ifndef _WIN32
 			term.c_lflag &= ~ICANON;
 			term.c_lflag &= ~ECHO;
 			tcsetattr(STDIN_FILENO, TCSANOW, &term);
 #endif
-			thread th(display_names, &sockp->getIstream());
+			async_names = async(display_names, &sockp->getIstream());
 			cout << "Press any key to start." << endl;
 			gch;
-			sleep_for(17ms);
 			sockp->getOstream().put(29);
+			async_names.wait();
 			play(false, sockp->getIstream(), sockp->getOstream());
 		}
 		else if(cmd == 'j')
@@ -164,22 +172,23 @@ int main(int argl,char**argv)
 #endif
 			cout << "Enter your name and the room you wish to join, on separate lines." << endl;
 			getline(cin, name) >> rnstr;
+			cin.get();
 			namlen = htonl(name.size());
-			rnum = htonl(stoul(rnstr));
+			rnum = htonl(stoul(rnstr, nullptr, 16));
 			sockp = make_unique<Socket>(serv_addr, PORT);
 			sockp->getOstream().put(msgt);
 			sockp->getOstream().PUTOBJ(namlen) << name;
 			sockp->getOstream().PUTOBJ(rnum);
 			msgt = sockp->getIstream().get();
+#ifndef _WIN32
+			term.c_lflag &= ~ICANON;
+			term.c_lflag &= ~ECHO;
+			tcsetattr(STDIN_FILENO, TCSANOW, &term);
+#endif
 			if(msgt == 17)
 			{
 				cout << fmt_green_foreground << "Successfully joined game." << fmt_reset << endl;
 				display_names(&sockp->getIstream());
-#ifndef _WIN32
-				term.c_lflag &= ~ICANON;
-				term.c_lflag &= ~ECHO;
-				tcsetattr(STDIN_FILENO, TCSANOW, &term);
-#endif
 				play(true, sockp->getIstream(), sockp->getOstream());
 			}
 			else if(msgt == 19)
@@ -189,6 +198,7 @@ int main(int argl,char**argv)
 		}
 		else
 			ring;
+		cout << "Press q to quit, c to create a room, j to join an existing one." << endl;
 		cmd = gchlo;
 	}
 #ifndef _WIN32

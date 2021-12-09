@@ -16,6 +16,8 @@ public:
 protected:
 	virtual int sync()override;
 	virtual std::streamsize showmanyc()override;
+	virtual int_type underflow()override;
+	virtual int_type uflow()override;
 	virtual std::streamsize xsgetn(char_type *buf, std::streamsize sz)override;
 	virtual std::streamsize xsputn(const char_type *buf, std::streamsize sz)override;
 	virtual int_type overflow(int_type ch = traits_type::eof())override;
