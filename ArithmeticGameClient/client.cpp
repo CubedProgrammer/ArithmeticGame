@@ -76,6 +76,7 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			oss.put(29);
 		uint32_t corrects, tot;
 		uint32_t cc;
+		cout << '\n';
 		iss.get(msgt);
 		while(msgt == 47)
 		{
@@ -86,21 +87,21 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			iss.GETOBJ(corrects).GETOBJ(tot);
 			corrects = ntohl(corrects);
 			tot = ntohl(tot);
-			cout << '\r' << anshis << fmt_reset << corrects << '/' << tot << ' ' << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b";
-			cout.flush();
+			cout << "\033\1331F";
+			cout << anshis << fmt_reset << corrects << '/' << tot << ' ' << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b" << endl;
 			cho = gch - '0' + 31;
 			oss.put(cho);
 			iss.get(msgt);
 			if(msgt == 37)
 			{
-				cout << '\r' << fmt_green_foreground << fmt_bold << "CORRECT" << fmt_reset << " +1 for you.";
+				cout << fmt_green_foreground << fmt_bold << "CORRECT" << fmt_reset << " +1 for you.";
 				anshis += fmt_green_background;
 			}
 			else if(msgt == 41)
 			{
 				iss.GETOBJ(cc);
 				cc = ntohl(cc);
-				cout << '\r' << fmt_red_foreground << fmt_bold << "WRONG" << fmt_reset << " No point for you, " << cc << " was the answer.";
+				cout << fmt_red_foreground << fmt_bold << "WRONG" << fmt_reset << " No point for you, " << cc << " was the answer.";
 				anshis += fmt_red_background;
 			}
 			cout.flush();

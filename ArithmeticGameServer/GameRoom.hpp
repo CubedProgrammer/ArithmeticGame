@@ -36,7 +36,7 @@ public:
 	{
 		return this->problems.size();
 	}
-	const Player &getPlayer(std::size_t player)const
+	Player &getPlayer(std::size_t player)
 	{
 		return this->players.at(player);
 	}

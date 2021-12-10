@@ -1,3 +1,4 @@
+#include<iostream>
 #include"Player.hpp"
 std::size_t Player::getCorrect()const
 {

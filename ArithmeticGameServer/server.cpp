@@ -11,7 +11,7 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 {
 	GameRoom &room = *roomp;
 	char msgt = 29;
-	const auto &player = room.getPlayer(indpl);
+	auto &player = room.getPlayer(indpl);
 	int cli = player.getFileDes();
 	if(indpl == 0)
 	{
@@ -22,13 +22,14 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 	}
 	else
 		fdget_obj(cli, msgt);
-	bool quit = msgt != 29;
+	//bool quit = msgt != 29;
+	int corr = 0;
 	for(std::size_t i=0;i<room.getProblemCount();i++)
 	{
 		msgt = 47;
 		fdput_obj(cli, msgt);
 		fdput_str(cli, room.getProblem(i));
-		fdput_obj(cli, htonl(player.getCorrect()));
+		fdput_obj(cli, htonl(corr));
 		fdput_obj(cli, htonl(i));
 		fdget_obj(cli, msgt);
 		if(msgt >= 32 && msgt <= 35)
@@ -37,15 +38,18 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 			fdput_obj(cli, msgt);
 			if(msgt == 41)
 				fdput_obj(cli, htonl(room.getAnsVal(i)));
-			usleep(500000);
+			else
+				++corr;
+			std::cout << player.getName() << " is at " << corr << '/' << i + 1 << std::endl;
+			usleep(1000000);
 		}
 		else
 		{
-			quit = true;
+			//quit = true;
 			i = -2;
 		}
 	}
-	if(!quit)
+	/*if(!quit)
 	{
 		msgt = 43;
 		fdput_obj(cli, msgt);
@@ -64,7 +68,7 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 			}
 			usleep(250000);
 		}
-	}
+	}*/
 	msgt = 31;
 	fdput_obj(cli, msgt);
 	close(cli);
