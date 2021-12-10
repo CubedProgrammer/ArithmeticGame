@@ -36,12 +36,13 @@ std::pair<std::uint32_t,std::uint32_t>getSettings()
 void display_names(std::istream *issp)
 {
 	auto &iss = *issp;
-	char msgt = iss.get();
+	char msgt;
+	iss.GETOBJ(msgt);
 	std::uint32_t cc;
 	std::string name;
 	while(msgt != 89)
 	{
-		if(msgt == 83)
+		if (msgt == 83)
 		{
 			iss.GETOBJ(cc);
 			cc = ntohl(cc);
@@ -49,7 +50,7 @@ void display_names(std::istream *issp)
 			iss.read(name.data(), cc);
 			std::cout << fmt_bold << name << fmt_reset << " has joined the game." << std::endl;
 		}
-		msgt = iss.get();
+		iss.GETOBJ(msgt);
 	}
 }
 void play(bool signal, std::istream &iss, std::ostream&oss)
@@ -66,24 +67,25 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 	sleep_for(997ms);
 	cout << "\b1";
 	cout.flush();
-	char msgt = iss.get();
-	if(msgt == 97)
+	char msgt;
+	iss.read(&msgt, 1);
+	if (msgt == 97)
 	{
 		string ps, anshis;
 		char cho;
 		cout << "\b0" << endl;
-		if(signal)
+		if (signal)
 			oss.put(29);
 		uint32_t corrects, tot;
 		uint32_t cc;
 		cout << '\n';
-		iss.get(msgt);
-		while(msgt == 47)
+		iss.GETOBJ(msgt);
+		while (msgt == 47)
 		{
 			iss.GETOBJ(cc);
 			cc = ntohl(cc);
 			ps = std::string(cc, msgt);
-			iss.read(ps.data(),cc);
+			iss.read(ps.data(), cc);
 			iss.GETOBJ(corrects).GETOBJ(tot);
 			corrects = ntohl(corrects);
 			tot = ntohl(tot);
@@ -91,13 +93,13 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			cout << anshis << fmt_reset << corrects << '/' << tot << ' ' << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b" << endl;
 			cho = gch - '0' + 31;
 			oss.put(cho);
-			iss.get(msgt);
-			if(msgt == 37)
+			iss.GETOBJ(msgt);
+			if (msgt == 37)
 			{
 				cout << fmt_green_foreground << fmt_bold << "CORRECT" << fmt_reset << " +1 for you.";
 				anshis += fmt_green_background;
 			}
-			else if(msgt == 41)
+			else if (msgt == 41)
 			{
 				iss.GETOBJ(cc);
 				cc = ntohl(cc);
@@ -106,7 +108,7 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			}
 			cout.flush();
 			anshis += ' ';
-			iss.get(msgt);
+			iss.read(&msgt, 1);
 		}
 	}
 	endl(cout);
@@ -191,7 +193,7 @@ int main(int argl,char**argv)
 			sockp->getOstream().put(msgt);
 			sockp->getOstream().PUTOBJ(namlen) << name;
 			sockp->getOstream().PUTOBJ(rnum);
-			msgt = sockp->getIstream().get();
+			sockp->getIstream().GETOBJ(msgt);
 #ifndef _WIN32
 			term.c_lflag &= ~ICANON;
 			term.c_lflag &= ~ECHO;
