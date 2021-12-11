@@ -122,11 +122,10 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 		msgt = 43;
 		oss.put(msgt);
 		iss.GETOBJ(cc);
-		uint32_t pcnt = ntohl(cc);
+		uint32_t pcnt = ntohl(cc), finish = tot + 1;
 		iss.GETOBJ(msgt);
 		while(msgt == 43)
 		{
-			cout.flush();
 			for(uint32_t i=0;i<pcnt;i++)
 			{
 				iss.GETOBJ(cc);
@@ -137,9 +136,17 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 				corrects = ntohl(corrects);
 				tot = ntohl(tot);
 				cout << fmt_bold << ps << fmt_reset << ' ' << corrects << '/' << tot;
+				for(uint32_t i=0;i<=tot;i++)
+					cout << '-';
+				if(tot < finish)
+					cout << '>';
+				for(uint32_t i=tot+1;i<finish;i++)
+					cout << ' ';
+				cout << '|';
 				if(i + 1 < pcnt)
 					endl(cout);
 			}
+			cout.flush();
 			iss.GETOBJ(msgt);
 			if(msgt == 43)
 			{
