@@ -1,3 +1,4 @@
+#include<signal.h>
 #include<ctime>
 #include<iostream>
 #include<random>
@@ -22,7 +23,7 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 	}
 	else
 		fdget_obj(cli, msgt);
-	//bool quit = msgt != 29;
+	bool quit = msgt != 29;
 	int corr = 0;
 	for(std::size_t i=0;i<room.getProblemCount();i++)
 	{
@@ -45,39 +46,47 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 		}
 		else
 		{
-			//quit = true;
+			quit = true;
 			i = -2;
 		}
 	}
-	/*if(!quit)
+	if(!quit)
 	{
 		msgt = 43;
 		fdput_obj(cli, msgt);
 		fdget_obj(cli, msgt);
 		quit = msgt == 31;
+		fdput_obj(cli, htonl(room.getPlayerCount()));
+		std::cout << room.getPlayerCount() << " players in the game." << std::endl;
 		while(!quit)
 		{
 			quit = true;
+			msgt = 43;
+			fdput_obj(cli, msgt);
 			for(std::size_t i=0;i<room.getPlayerCount();i++)
 			{
 				const auto &player = room.getPlayer(i);
 				quit = quit && player.getPos() == room.getProblemCount();
+				std::cout << player.getName().size() << std::endl;
 				fdput_str(cli, player.getName());
 				fdput_obj(cli, htonl(player.getCorrect()));
 				fdput_obj(cli, htonl(player.getPos()));
 			}
-			usleep(250000);
+			usleep(500000);
 		}
-	}*/
+	}
 	msgt = 31;
 	fdput_obj(cli, msgt);
+	usleep(1000000);
 	close(cli);
+	std::cout << "Disconnected " << player.getName() << " of room " << room.getRoomNumber() << std::endl;
 }
-void accept_clients(std::vector<std::thread>&ths, std::unordered_map<uint32_t, GameRoom>&rooms)
+void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map<uint32_t, GameRoom>&rooms)
 {
 	using namespace std;
 	linear_congruential_engine<uint64_t, 25214903917, 11, 1l << 48>dice(time(nullptr) ^ 25214903917);
 	ClientAccepter handler(PORT);
+	server = handler.getServer();
 	bool cr;
 	int cli, succ;
 	uint32_t rnum, maxi;
@@ -133,18 +142,22 @@ void accept_clients(std::vector<std::thread>&ths, std::unordered_map<uint32_t, G
 }
 struct AcceptFunction
 {
-	void operator()(std::vector<std::thread>*ths, std::unordered_map<uint32_t, GameRoom>*rooms)const
+	void operator()(int*server, std::vector<std::thread>*ths, std::unordered_map<uint32_t, GameRoom>*rooms)const
 	{
-		accept_clients(*ths, *rooms);
+		accept_clients(*server, *ths, *rooms);
 	}
 };
 int main(int argl,char**argv)
 {
+	signal(SIGPIPE, SIG_IGN);
 	using namespace std;
 	cout << "ArithmeticGameServer has begun." << endl;
+	int server;
 	unordered_map<uint32_t, GameRoom>rooms;
 	vector<thread>ths;
-	thread th(AcceptFunction(), &ths, &rooms);
+	thread th(AcceptFunction(), &server, &ths, &rooms);
 	cin.get();
+	th.detach();
+	close(server);
 	return 0;
 }
