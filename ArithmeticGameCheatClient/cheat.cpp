@@ -19,8 +19,14 @@ int main(int argl,char**argv)
 		cmd += ' ';
 		cmd += argv[2];
 		string name = argv[3], rnstr = argv[4];
+		cout << cmd << endl;
 		Process proc(cmd);
-		istream is;
+		istream &proc_out = proc.getStdout();
+		ostream &proc_in = proc.getStdin();
+		string prompt;
+		getline(proc_out, prompt);
+		proc_in.put('q');
+		cout << prompt << endl;
 	}
 	return 0;
 }
