@@ -1,10 +1,5 @@
 #ifdef _WIN32
 #include<windows.h>
-#define gch getch();
-#else
-#include<termios.h>
-#include<unistd.h>
-#define gch std::cin.get()
 #endif
 #include<algorithm>
 #include<array>

@@ -10,6 +10,28 @@
 Process::Process(const std::string &cmd)
 {
 #ifdef _WIN32
+	HANDLE p_ins[2], p_outs[2];
+	SECURITY_ATTRIBUTES attr;
+	attr.nLength = sizeof(attr);
+	attr.lpSecurityDescriptor = NULL;
+	attr.bInheritHandle = TRUE;
+	CreatePipe(p_ins, p_ins + 1, &attr, 0);
+	CreatePipe(p_outs, p_outs + 1, &attr, 0);
+	SetHandleInformation(p_ins[1], HANDLE_FLAG_INHERIT, 0);
+	SetHandleInformation(p_outs[0], HANDLE_FLAG_INHERIT, 0);
+	STARTUPINFO si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	ZeroMemory(&pi, sizeof(pi));
+	si.cb = sizeof(si);
+	si.hStdInput = p_ins[0];
+	si.hStdOutput = p_outs[1];
+	si.dwFlags |= STARTF_USESTDHANDLES;
+	std::string cmd_cp = cmd;
+	cmd_cp.reserve(cmd.size() + 4);
+	CreateProcessA(NULL, cmd_cp.data(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+	CloseHandle(p_ins[0]);
+	CloseHandle(p_outs[1]);
 #else
 	int p_ins[2], p_outs[2];
 	int succ = pipe(p_ins);
@@ -35,8 +57,8 @@ Process::Process(const std::string &cmd)
 		close(p_ins[0]);
 		close(p_outs[1]);
 	}
-	pipebuf *pbuf = new pipebuf(p_ins[1], p_outs[0]);
 #endif
+	pipebuf *pbuf = new pipebuf(p_ins[1], p_outs[0]);
 	this->ips = new ipipestream(pbuf);
 	this->ops = new opipestream(pbuf);
 }

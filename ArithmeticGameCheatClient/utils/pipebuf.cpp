@@ -1,4 +1,6 @@
+#ifndef _WIN32
 #include<unistd.h>
+#endif
 #include"pipebuf.hpp"
 pipebuf::pipebuf(pipe_type p_in, pipe_type p_out)
 	:p_in(p_in), p_out(p_out), ch() {}
@@ -39,6 +41,9 @@ pipebuf::int_type pipebuf::uflow()
 std::streamsize pipebuf::xsgetn(char_type *buf, std::streamsize sz)
 {
 #ifdef _WIN32
+	DWORD bc;
+	ReadFile(this->p_out, buf, sz, &bc, NULL);
+	return bc;
 #else
 	return read(this->p_out, buf, sz);
 #endif
@@ -47,6 +52,9 @@ std::streamsize pipebuf::xsgetn(char_type *buf, std::streamsize sz)
 std::streamsize pipebuf::xsputn(const char_type *buf, std::streamsize sz)
 {
 #ifdef _WIN32
+	DWORD bc;
+	WriteFile(this->p_in, buf, sz, &bc, NULL);
+	return bc;
 #else
 	return write(this->p_in, buf, sz);
 #endif
