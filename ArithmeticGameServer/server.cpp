@@ -41,7 +41,6 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 				fdput_obj(cli, htonl(room.getAnsVal(i)));
 			else
 				++corr;
-			std::cout << player.getName() << " is at " << corr << '/' << i + 1 << std::endl;
 			usleep(1000000);
 		}
 		else
@@ -57,7 +56,6 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 		fdget_obj(cli, msgt);
 		quit = msgt == 31;
 		fdput_obj(cli, htonl(room.getPlayerCount()));
-		std::cout << room.getPlayerCount() << " players in the game." << std::endl;
 		while(!quit)
 		{
 			quit = true;
@@ -67,7 +65,6 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 			{
 				const auto &player = room.getPlayer(i);
 				quit = quit && player.getPos() == room.getProblemCount();
-				std::cout << player.getName().size() << std::endl;
 				fdput_str(cli, player.getName());
 				fdput_obj(cli, htonl(player.getCorrect()));
 				fdput_obj(cli, htonl(player.getPos()));
@@ -94,9 +91,25 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 	string name;
 	char status;
 	GameRoom *roomp = nullptr;
+	vector<uint32_t>to_remove;
 	for(;;)
 	{
 		succ = handler.accept_cli(cr, cli, name);
+		to_remove.clear();
+		for(auto& [num, room] : rooms)
+		{
+			if(room.isFinished())
+				to_remove.push_back(num);
+		}
+		for(auto &num : to_remove)
+			rooms.erase(num);
+		if(rooms.empty())
+		{
+			for(auto &th : ths)
+				th.join();
+			ths.clear();
+			cout << "Rooms are empty, cleared thread array." << endl;
+		}
 		if(succ == 0)
 		{
 			if(cr)
@@ -135,6 +148,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 				}
 			}
 			ths.emplace_back(handle_client, roomp->getPlayerCount() - 1, roomp);
+			cout << ths.size() << ' ' << rooms.size() << endl;
 		}
 		else
 			cerr << "Accepting a client has failed." << endl;

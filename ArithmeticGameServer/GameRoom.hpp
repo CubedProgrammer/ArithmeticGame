@@ -44,6 +44,7 @@ public:
 	{
 		return this->players.size();
 	}
+	bool isFinished()const;
 	void begin();
 	constexpr bool hasBegun()const
 	{

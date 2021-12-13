@@ -75,6 +75,14 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 	}
 }
 
+bool GameRoom::isFinished()const
+{
+	bool fini = true;
+	for(const auto &player : this->players)
+		fini = fini && player.getPos() == this->problems.size();
+	return fini;
+}
+
 void GameRoom::begin()
 {
 	std::cout << "Room " << std::hex << this->num << std::dec << " has begun!" << std::endl;
