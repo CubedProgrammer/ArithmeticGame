@@ -146,8 +146,11 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 					rm.addPlayer(cli, name);
 					cout << name << " has joined room " << hex << rnum << dec << endl;
 				}
+				else
+					succ = -1;
 			}
-			ths.emplace_back(handle_client, roomp->getPlayerCount() - 1, roomp);
+			if(succ == 0)
+				ths.emplace_back(handle_client, roomp->getPlayerCount() - 1, roomp);
 			cout << ths.size() << ' ' << rooms.size() << endl;
 		}
 		else
