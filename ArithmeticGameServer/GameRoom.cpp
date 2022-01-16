@@ -67,7 +67,7 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 		this->answers[i].choices[1] = fakes[1];
 		this->answers[i].choices[2] = fakes[2];
 		this->answers[i].choices[3] = ans;
-		std::shuffle(this->answers[i].choices.begin(), this->answers[i].choices.end(), std::linear_congruential_engine<std::uint64_t, 25214903917, 11, 1l << 48>(this->num ^ 25214903917));
+		std::shuffle(this->answers[i].choices.begin(), this->answers[i].choices.end(), std::linear_congruential_engine<std::uint64_t, 25214903917, 11, 1l << 48>(dice() ^ 25214903917));
 		this->answers[i].actual = std::find(this->answers[i].choices.begin(), this->answers[i].choices.end(), ans) - this->answers[i].choices.begin();
 		this->problems[i] = std::to_string(lop) + op + std::to_string(rop) + "=?";
 		for(const auto &choice : this->answers[i].choices)
