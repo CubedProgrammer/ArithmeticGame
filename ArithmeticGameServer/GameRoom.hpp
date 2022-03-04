@@ -40,6 +40,10 @@ public:
 	{
 		return this->players.at(player);
 	}
+	const Player &getPlayer(std::size_t player)const
+	{
+		return this->players.at(player);
+	}
 	std::size_t getPlayerCount()const
 	{
 		return this->players.size();

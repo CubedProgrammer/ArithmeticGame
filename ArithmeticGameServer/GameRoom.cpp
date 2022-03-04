@@ -85,7 +85,7 @@ bool GameRoom::isFinished()const
 
 void GameRoom::begin()
 {
-	std::cout << "Room " << std::hex << this->num << std::dec << " has begun!" << std::endl;
+	std::cout << time_str() << "Room " << std::hex << this->num << std::dec << " has begun!" << std::endl;
 	char msgt = 89;
 	for(const auto &player : this->players)
 		fdput_obj(player.getFileDes(), msgt);

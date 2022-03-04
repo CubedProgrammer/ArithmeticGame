@@ -8,6 +8,7 @@
 #include"GameRoom.hpp"
 #include"utils.hpp"
 #define PORT 6969
+using std::uint32_t;
 void handle_client(std::size_t indpl, GameRoom *roomp)
 {
 	GameRoom &room = *roomp;
@@ -76,7 +77,7 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 	fdput_obj(cli, msgt);
 	usleep(1000000);
 	close(cli);
-	std::cout << "Disconnected " << player.getName() << " of room " << room.getRoomNumber() << std::endl;
+	std::cout << time_str() << "Disconnected " << player.getName() << " of room " << room.getRoomNumber() << std::endl;
 }
 void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map<uint32_t, GameRoom>&rooms)
 {
@@ -120,7 +121,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 				maxi = ntohl(maxi);
 				pcnt = ntohl(pcnt);
 				rooms[rnum] = GameRoom(pcnt, maxi, rnum);
-				cout << name << " has created room " << hex << rnum << dec << " with " << maxi << " as maximum operand and " << pcnt << " problems." << endl;
+				cout << time_str() << name << " has created room " << hex << rnum << dec << " with " << maxi << " as maximum operand and " << pcnt << " problems." << endl;
 				fdput_obj(cli, htonl(rnum));
 				rooms[rnum].addPlayer(cli, name);
 				roomp = &rooms[rnum];
@@ -144,7 +145,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 				{
 					auto &rm = *roomp;
 					rm.addPlayer(cli, name);
-					cout << name << " has joined room " << hex << rnum << dec << endl;
+					cout << time_str() << name << " has joined room " << hex << rnum << dec << endl;
 				}
 				else
 					succ = -1;
@@ -155,6 +156,36 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 		}
 		else
 			cerr << "Accepting a client has failed." << endl;
+	}
+}
+void parsecmd(const std::unordered_map<uint32_t, GameRoom>&rooms)
+{
+	using namespace std;
+	string token;
+	cin >> token;
+	while(token!="exit")
+	{
+		if(token=="ls")
+		{
+			for(const auto &[num, rm]:rooms)
+			{
+				cout << "Room 0x" << hex << num << dec << " has " << rm.getProblemCount() << " problems and " << rm.getPlayerCount() << " players.";
+				if(rm.hasBegun())
+				{
+					cout << " Begun.";
+					if(rm.isFinished())
+						cout << " Finished.";
+				}
+				cout << '\n';
+				for(size_t i=0;i<rm.getPlayerCount();i++)
+				{
+					cout << rm.getPlayer(i).getName() << ' ' << rm.getPlayer(i).getPos() << endl;
+				}
+			}
+		}
+		else
+			cout << '\a';
+		cin >> token;
 	}
 }
 struct AcceptFunction
@@ -173,7 +204,7 @@ int main(int argl,char**argv)
 	unordered_map<uint32_t, GameRoom>rooms;
 	vector<thread>ths;
 	thread th(AcceptFunction(), &server, &ths, &rooms);
-	cin.get();
+	parsecmd(rooms);
 	th.detach();
 	close(server);
 	return 0;

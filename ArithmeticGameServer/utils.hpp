@@ -2,7 +2,17 @@
 #define UTILS_HPP_
 #include<arpa/inet.h>
 #include<unistd.h>
+#include<chrono>
 #include<string>
+inline std::string time_str()
+{
+	using namespace std::chrono;
+#if __cplusplus >= 202002L
+#else
+	auto dur = duration_cast<seconds>(system_clock::now().time_since_epoch());
+	return std::to_string(dur.count());
+#endif
+}
 template<typename T>
 inline std::size_t fdget_obj(int fd, T&obj)
 {
