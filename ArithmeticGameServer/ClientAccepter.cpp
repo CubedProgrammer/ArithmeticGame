@@ -11,7 +11,10 @@ int ClientAccepter::accept_cli(bool &cr, int &fd, std::string &name)
 		char c;
 		fdget_obj(cli, c);
 		if(c != 13 && c != 17)
+		{
 			std::cerr << "A client has sent invalid request." << std::endl;
+			succ = -1;
+		}
 		else
 		{
 			fdget_str(cli, name);

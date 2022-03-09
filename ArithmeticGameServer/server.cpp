@@ -120,6 +120,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 				fdget_obj(cli, pcnt);
 				maxi = ntohl(maxi);
 				pcnt = ntohl(pcnt);
+				pcnt = min(pcnt, 100u);
 				rooms[rnum] = GameRoom(pcnt, maxi, rnum);
 				cout << time_str() << name << " has created room " << hex << rnum << dec << " with " << maxi << " as maximum operand and " << pcnt << " problems." << endl;
 				fdput_obj(cli, htonl(rnum));
@@ -148,7 +149,10 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 					cout << time_str() << name << " has joined room " << hex << rnum << dec << endl;
 				}
 				else
+				{
+					cout << time_str() << name << " tried to join an invalid room." << endl;
 					succ = -1;
+				}
 			}
 			if(succ == 0)
 				ths.emplace_back(handle_client, roomp->getPlayerCount() - 1, roomp);
