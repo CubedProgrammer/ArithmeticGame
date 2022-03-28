@@ -11,6 +11,7 @@ GameRoom::GameRoom(std::size_t pcnt, std::uint32_t maxi, std::uint32_t num)
 	std::array<std::uint32_t, 3>fakes;
 	std::mt19937_64 dice(num);
 	std::uint32_t lop, rop, ans;
+	pcnt=maxi==0?0:pcnt;
 	char op;
 	for(std::size_t i=0;i<pcnt;i++)
 	{
@@ -98,7 +99,6 @@ void GameRoom::begin()
 
 void GameRoom::addPlayer(int fd, const std::string &name)
 {
-	std::cout << name << " has joined room " << std::hex << this->num << std::dec << std::endl;
 	char msgt = 83;
 	for(const auto &player : this->players)
 	{

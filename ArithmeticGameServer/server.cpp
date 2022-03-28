@@ -15,69 +15,77 @@ void handle_client(std::size_t indpl, GameRoom *roomp)
 	char msgt = 29;
 	auto &player = room.getPlayer(indpl);
 	int cli = player.getFileDes();
+	int bc;
 	if(indpl == 0)
 	{
-		fdget_obj(cli, msgt);
+		bc = fdget_obj(cli, msgt);
 		while(msgt != 29)
 			fdget_obj(cli, msgt);
 		room.begin();
 	}
 	else
-		fdget_obj(cli, msgt);
-	bool quit = msgt != 29;
-	int corr = 0;
-	for(std::size_t i=0;i<room.getProblemCount();i++)
+		bc = fdget_obj(cli, msgt);
+	if(bc == 0)
 	{
-		msgt = 47;
-		fdput_obj(cli, msgt);
-		fdput_str(cli, room.getProblem(i));
-		fdput_obj(cli, htonl(corr));
-		fdput_obj(cli, htonl(i));
-		fdget_obj(cli, msgt);
-		if(msgt >= 32 && msgt <= 35)
-		{
-			msgt = room.ans(indpl, msgt - 32) ? 37 : 41;
-			fdput_obj(cli, msgt);
-			if(msgt == 41)
-				fdput_obj(cli, htonl(room.getAnsVal(i)));
-			else
-				++corr;
-			usleep(1000000);
-		}
-		else
-		{
-			quit = true;
-			i = -2;
-		}
+		std::cout << time_str() << "Client " << player.getName() << " of room " << std::hex << room.getRoomNumber() << std::dec << " has disconnected prematurely." << std::endl;
 	}
-	if(!quit)
+	else
 	{
-		msgt = 43;
-		fdput_obj(cli, msgt);
-		fdget_obj(cli, msgt);
-		quit = msgt == 31;
-		fdput_obj(cli, htonl(room.getPlayerCount()));
-		while(!quit)
+		bool quit = msgt != 29;
+		int corr = 0;
+		for(std::size_t i=0;i<room.getProblemCount();i++)
 		{
-			quit = true;
+			msgt = 47;
+			fdput_obj(cli, msgt);
+			fdput_str(cli, room.getProblem(i));
+			fdput_obj(cli, htonl(corr));
+			fdput_obj(cli, htonl(i));
+			fdget_obj(cli, msgt);
+			if(msgt >= 32 && msgt <= 35)
+			{
+				msgt = room.ans(indpl, msgt - 32) ? 37 : 41;
+				fdput_obj(cli, msgt);
+				if(msgt == 41)
+					fdput_obj(cli, htonl(room.getAnsVal(i)));
+				else
+					++corr;
+				usleep(1000000);
+			}
+			else
+			{
+				quit = true;
+				i = -2;
+			}
+		}
+		if(!quit)
+		{
 			msgt = 43;
 			fdput_obj(cli, msgt);
-			for(std::size_t i=0;i<room.getPlayerCount();i++)
+			fdget_obj(cli, msgt);
+			quit = msgt == 31;
+			fdput_obj(cli, htonl(room.getPlayerCount()));
+			while(!quit)
 			{
-				const auto &player = room.getPlayer(i);
-				quit = quit && player.getPos() == room.getProblemCount();
-				fdput_str(cli, player.getName());
-				fdput_obj(cli, htonl(player.getCorrect()));
-				fdput_obj(cli, htonl(player.getPos()));
+				quit = true;
+				msgt = 43;
+				fdput_obj(cli, msgt);
+				for(std::size_t i=0;i<room.getPlayerCount();i++)
+				{
+					const auto &player = room.getPlayer(i);
+					quit = quit && player.getPos() == room.getProblemCount();
+					fdput_str(cli, player.getName());
+					fdput_obj(cli, htonl(player.getCorrect()));
+					fdput_obj(cli, htonl(player.getPos()));
+				}
+				usleep(500000);
 			}
-			usleep(500000);
 		}
+		msgt = 31;
+		fdput_obj(cli, msgt);
+		usleep(1000000);
+		close(cli);
+		std::cout << time_str() << "Disconnected " << player.getName() << " of room " << room.getRoomNumber() << std::endl;
 	}
-	msgt = 31;
-	fdput_obj(cli, msgt);
-	usleep(1000000);
-	close(cli);
-	std::cout << time_str() << "Disconnected " << player.getName() << " of room " << room.getRoomNumber() << std::endl;
 }
 void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map<uint32_t, GameRoom>&rooms)
 {
@@ -109,7 +117,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 			for(auto &th : ths)
 				th.join();
 			ths.clear();
-			cout << "Rooms are empty, cleared thread array." << endl;
+			cout << time_str() << "Rooms are empty, cleared thread array." << endl;
 		}
 		if(succ == 0)
 		{
@@ -156,7 +164,7 @@ void accept_clients(int&server, std::vector<std::thread>&ths, std::unordered_map
 			}
 			if(succ == 0)
 				ths.emplace_back(handle_client, roomp->getPlayerCount() - 1, roomp);
-			cout << ths.size() << ' ' << rooms.size() << endl;
+			cout << time_str() << ths.size() << ' ' << rooms.size() << endl;
 		}
 		else
 			cerr << "Accepting a client has failed." << endl;

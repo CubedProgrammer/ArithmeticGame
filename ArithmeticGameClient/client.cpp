@@ -26,9 +26,12 @@
 std::pair<std::uint32_t,std::uint32_t>getSettings()
 {
 	using namespace std;
-	pair<uint32_t, uint32_t> settings;
-	cout << "Enter the number of problems and the maximum size of the operand." << endl;
-	cin >> settings.second >> settings.first;
+	pair<uint32_t, uint32_t> settings{0, 0};
+	while(settings.second == 0|| settings.first > 10000 || settings.first < 3)
+	{
+		cout << "Enter the number of problems (at least one) and the maximum size of the operand (3-10000)." << endl;
+		cin >> settings.second >> settings.first;
+	}
 	settings.first = htonl(settings.first-1);
 	settings.second = htonl(settings.second);
 	return settings;
