@@ -61,6 +61,7 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 	using namespace std;
 	using namespace chrono;
 	using this_thread::sleep_for;
+	milliseconds begin, end;
 	cout << "Press buttons 1 through 4 to enter your answer." << endl;
 	cout << "Starting in 3";
 	cout.flush();
@@ -95,14 +96,17 @@ void play(bool signal, std::istream &iss, std::ostream&oss)
 			cout << "\033\1332F";
 			cout << anshis << fmt_reset << corrects << '/' << tot << endl;
 			cout << ps << "             \b\b\b\b\b\b\b\b\b\b\b\b\b" << endl;
+			begin = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
 			cho = gch - '0' + 31;
 			while(cho > 35 || cho < 32)
 			{
 				cout.put('\a').flush();
 				cho = gch - '0' + 31;
 			}
+			end = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
 			oss.put(cho);
 			iss.GETOBJ(msgt);
+			cout << end.count() - begin.count() << "ms to answer ";
 			if (msgt == 37)
 			{
 				cout << fmt_green_foreground << fmt_bold << "CORRECT" << fmt_reset << " +1 for you.";
